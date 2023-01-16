@@ -6,6 +6,14 @@ FROM ${BASE}:${TAG} AS sunshine-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# update base
+RUN <<_UPDATE_BASE
+#!/bin/bash
+apt-get update -y
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+_UPDATE_BASE
+
 FROM sunshine-base as sunshine-build
 
 ARG TARGETPLATFORM

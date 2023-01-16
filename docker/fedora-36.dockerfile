@@ -4,6 +4,14 @@ ARG BASE=fedora
 ARG TAG=36
 FROM ${BASE}:${TAG} AS sunshine-base
 
+# update base
+RUN <<_UPDATE_BASE
+#!/bin/bash
+dnf -y update
+dnf clean all
+rm -rf /var/cache/yum
+_UPDATE_BASE
+
 FROM sunshine-base as sunshine-build
 
 ARG TARGETPLATFORM
