@@ -486,6 +486,10 @@ namespace config {
       false,  // strict_rc_buffer
     },  // vaapi
 
+    {
+      true,  // persist_session
+    },  // pipewire
+
     {},  // capture
     {},  // encoder
     {},  // adapter_name
@@ -1115,6 +1119,8 @@ namespace config {
     int_f(vars, "vt_realtime", video.vt.vt_realtime, vt::rt_from_view);
 
     bool_f(vars, "vaapi_strict_rc_buffer", video.vaapi.strict_rc_buffer);
+
+    bool_f(vars, "pipewire_persist_session", video.pipewire.persist_session);
 
     string_f(vars, "capture", video.capture);
     string_f(vars, "encoder", video.encoder);

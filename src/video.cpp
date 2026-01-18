@@ -1968,6 +1968,9 @@ namespace video {
           }
         } else if (!images->running()) {
           break;
+        } else if (disp->variable_framerate()) {
+          // Variable framerate source - only encode when new frame arrives
+          continue;
         }
       }
 

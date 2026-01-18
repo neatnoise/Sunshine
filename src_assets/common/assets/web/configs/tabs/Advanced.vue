@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import PlatformLayout from '../../PlatformLayout.vue'
+import Checkbox from "../../Checkbox.vue";
 
 const props = defineProps([
   'platform',
@@ -69,6 +70,7 @@ const config = ref(props.config)
             <option value="x11">X11</option>
           </template>
           <template #linux>
+            <option value="pipewire">PipeWire</option>
             <option value="nvfbc">NvFBC</option>
             <option value="wlr">wlroots</option>
             <option value="kms">KMS</option>
@@ -82,6 +84,14 @@ const config = ref(props.config)
       </select>
       <div class="form-text">{{ $t('config.capture_desc') }}</div>
     </div>
+
+    <!-- PipeWire Persist Session -->
+    <Checkbox class="mb-3" v-if="platform === 'linux' && (config.capture === '' || config.capture === 'pipewire')"
+              id="pipewire_persist_session"
+              locale-prefix="config"
+              v-model="config.pipewire_persist_session"
+              default="true"
+    ></Checkbox>
 
     <!-- Encoder -->
     <div class="mb-3">
