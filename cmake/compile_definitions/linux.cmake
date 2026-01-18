@@ -131,6 +131,22 @@ if(Vulkan_FOUND)
             "${CMAKE_SOURCE_DIR}/src/platform/linux/vulkan_encode.cpp")
 endif()
 
+# pipewire
+option(SUNSHINE_ENABLE_PIPEWIRE "Enable PipeWire portal capture" ON)
+if(${SUNSHINE_ENABLE_PIPEWIRE})
+    pkg_check_modules(PIPEWIRE libpipewire-0.3)
+    pkg_check_modules(GIO gio-2.0)
+endif()
+if(PIPEWIRE_FOUND AND GIO_FOUND)
+    add_compile_definitions(SUNSHINE_BUILD_PIPEWIRE)
+    include_directories(SYSTEM ${PIPEWIRE_INCLUDE_DIRS} ${GIO_INCLUDE_DIRS})
+    list(APPEND PLATFORM_LIBRARIES ${PIPEWIRE_LIBRARIES} ${GIO_LIBRARIES})
+    list(APPEND PLATFORM_TARGET_FILES
+            "${CMAKE_SOURCE_DIR}/src/platform/linux/pipewire.h"
+            "${CMAKE_SOURCE_DIR}/src/platform/linux/pipewire.cpp")
+    message(STATUS "PipeWire portal capture enabled")
+endif()
+
 # wayland
 if(${SUNSHINE_ENABLE_WAYLAND})
     find_package(Wayland REQUIRED)

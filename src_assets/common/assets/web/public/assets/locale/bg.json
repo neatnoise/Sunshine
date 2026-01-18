@@ -147,6 +147,8 @@
     "channels": "Максимален брой свързани клиенти",
     "channels_desc_1": "Sunshine може да позволи една сесия за поточно предаване да бъде споделена с множество клиенти едновременно.",
     "channels_desc_2": "Някои методи за хардуерно кодиране могат да имат ограничения, които намаляват производителността при излъчване на повече от един поток.",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac – контекстно-адаптивно двоично аритметично кодиране – по-високо качество",
     "coder_cavlc": "cavlc – контекстно адаптивно кодиране с променлива дължина – по-бързо декодиране",
     "configuration": "Настройки",

@@ -147,6 +147,8 @@
     "channels": "Maximalt antal anslutna klienter",
     "channels_desc_1": "Sunshine kan tillåta en enda streaming-session att delas med flera klienter samtidigt.",
     "channels_desc_2": "Vissa hårdvarukodare kan ha begränsningar som minskar prestandan med flera strömmar.",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac – kontext adaptiv binär aritmetisk kodning - högre kvalitet",
     "coder_cavlc": "cavlc – sammanhangsberoende kodning med variabellängd - snabbare avkodning",
     "configuration": "Konfiguration",

@@ -534,6 +534,14 @@ namespace platf {
 
     virtual ~display_t() = default;
 
+    /**
+     * @brief Whether to match encoding rate to capture rate.
+     * @return true for variable framerate sources (e.g. PipeWire)
+     */
+    virtual bool variable_framerate() {
+      return false;
+    }
+
     // Offsets for when streaming a specific monitor. By default, they are 0.
     int offset_x, offset_y;
     int env_width, env_height;

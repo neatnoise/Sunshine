@@ -147,6 +147,8 @@
     "channels": "Maximal verbundene Clients",
     "channels_desc_1": "Sunshine kann eine einzelne Streaming-Sitzung gleichzeitig mit mehreren Clients teilen.",
     "channels_desc_2": "Einige Hardware-Encoder haben möglicherweise Einschränkungen, die die Leistung bei mehreren Streams verringern.",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- kontextadaptive binäre arithmetische Kodierung - höhere Qualität",
     "coder_cavlc": "cavlc -- kontextadaptive Kodierung variabler Länge - schnellere Dekodierung",
     "configuration": "Konfiguration",

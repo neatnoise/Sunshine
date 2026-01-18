@@ -147,6 +147,8 @@
     "channels": "最大連線用戶端數量",
     "channels_desc_1": "Sunshine 可讓單一串流工作階段同時與多個裝置共享。",
     "channels_desc_2": "某些硬體編碼器可能會因多重串流而受到性能限制。",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac—上下文自適應二元算術編碼，更高的品質",
     "coder_cavlc": "cavlc—上下文自適應可變長度編碼 - 解碼速度較快",
     "configuration": "組態",

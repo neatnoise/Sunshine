@@ -147,6 +147,8 @@
     "channels": "最多同时连接客户端数",
     "channels_desc_1": "Sunshine 允许多个客户端同时共享一个串流会话。",
     "channels_desc_2": "某些硬件编码器可能具有降低多个流性能的限制。",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- 上下文自适应二进制算术编码- 较高质量",
     "coder_cavlc": "cavlc -- 上下文适应变量编码 - 更快解码",
     "configuration": "配置",
