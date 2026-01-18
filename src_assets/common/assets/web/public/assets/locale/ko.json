@@ -147,6 +147,8 @@
     "channels": "최대 연결 클라이언트 수",
     "channels_desc_1": "Sunshine을 사용하면 하나의 스트리밍 세션을 여러 클라이언트와 동시에 공유할 수 있습니다.",
     "channels_desc_2": "일부 하드웨어 인코더에는 다중 스트림에서 성능을 저하시키는 제한이 있을 수 있습니다.",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "카박 - 컨텍스트 적응형 이진 산술 코딩 - 더 높은 품질",
     "coder_cavlc": "cavlc - 컨텍스트 적응형 가변 길이 코딩 - 더 빠른 디코딩",
     "configuration": "설정",

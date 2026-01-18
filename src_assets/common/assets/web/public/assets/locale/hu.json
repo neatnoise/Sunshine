@@ -147,6 +147,8 @@
     "channels": "Maximális csatlakozott kliensek",
     "channels_desc_1": "A Sunshine engedélyezheti, hogy egyetlen streaming munkamenet több klienssel is megosztható legyen egyidejűleg.",
     "channels_desc_2": "Néhány hardveres kódolónak lehetnek korlátozásai, amik csökkentik a teljesítményt több streammel.",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- kontextus adaptív bináris aritmetikai kódolás - jobb minőség",
     "coder_cavlc": "cavlc -- kontextus adaptív változó hosszúságú kódolás - gyorsabb dekódolás",
     "configuration": "Konfiguráció",

@@ -147,6 +147,8 @@
     "channels": "最大接続クライアント数",
     "channels_desc_1": "Sunshineは、単一のストリーミングセッションを複数のクライアントと同時に共有することができます。",
     "channels_desc_2": "一部のハードウェアエンコーダには、複数のストリームでパフォーマンスを低下させる制限がある場合があります。",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- コンテキスト適応二進数演算符号化 - 高品質",
     "coder_cavlc": "cavlc -- コンテキスト適応型可変長符号化 - 高速デコード",
     "configuration": "設定",

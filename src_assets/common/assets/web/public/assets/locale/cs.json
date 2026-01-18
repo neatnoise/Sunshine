@@ -147,6 +147,8 @@
     "channels": "Maximální počet připojených klientů",
     "channels_desc_1": "Sunshine může umožnit sdílení jedné relace streamování s více klienty současně.",
     "channels_desc_2": "Některé hardwarové enkodéry mohou mít omezení, která snižují výkon s více streamy.",
+    "pipewire_persist_session": "PipeWire Persist Session",
+    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- kontextové binární aritmetické kódování – vyšší kvalita",
     "coder_cavlc": "cavlc -- kontextové adaptivní kódování variabilní délky - rychlejší dekódování",
     "configuration": "Konfigurace",
