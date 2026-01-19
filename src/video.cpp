@@ -2144,6 +2144,10 @@ namespace video {
 
     encode_session.ctx = &ctx;
 
+    // Update display dimensions from actual captured image to ensure encoder uses correct size
+    disp->width = img.width;
+    disp->height = img.height;
+
     auto encode_device = make_encode_device(*disp, encoder, ctx.config);
     if (!encode_device) {
       return std::nullopt;
