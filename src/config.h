@@ -91,6 +91,10 @@ namespace config {
       int rc_mode;  // 0=auto, 1=cqp, 2=cbr, 3=vbr
     } vk;
 
+    struct {
+      bool persist_session;  // Save/restore PipeWire session token
+    } pipewire;
+
     struct dd_t {
       struct workarounds_t {
         std::chrono::milliseconds hdr_toggle_delay;  ///< Specify whether to apply HDR high-contrast color workaround and what delay to use.
