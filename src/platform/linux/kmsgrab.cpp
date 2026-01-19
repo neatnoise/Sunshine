@@ -27,9 +27,6 @@
 #include "src/utility.h"
 #include "src/video.h"
 #include "vaapi.h"
-#ifdef SUNSHINE_BUILD_VULKAN
-#include "vulkan_encode.h"
-#endif
 #include "wayland.h"
 
 using namespace std::literals;
@@ -691,16 +688,14 @@ namespace platf {
 
             auto monitor = pos->crtc_to_monitor.find(plane->crtc_id);
             if (monitor != std::end(pos->crtc_to_monitor)) {
-              auto &viewport = monitor->second.viewport;
-
-              width = viewport.width;
-              height = viewport.height;
+              // Use physical framebuffer size, not logical viewport (which may be scaled)
+              width = fb->width;
+              height = fb->height;
 
               switch (card.get_panel_orientation(plane->plane_id)) {
                 case DRM_MODE_ROTATE_270:
                   BOOST_LOG(debug) << "Detected panel orientation at 90, swapping width and height.";
-                  width = viewport.height;
-                  height = viewport.width;
+                  std::swap(width, height);
                   break;
                 case DRM_MODE_ROTATE_90:
                 case DRM_MODE_ROTATE_180:
@@ -708,8 +703,8 @@ namespace platf {
                   break;
               }
 
-              offset_x = viewport.offset_x;
-              offset_y = viewport.offset_y;
+              offset_x = monitor->second.viewport.offset_x;
+              offset_y = monitor->second.viewport.offset_y;
             }
 
             // This code path shouldn't happen, but it's there just in case.
@@ -1039,7 +1034,7 @@ namespace platf {
         }
       }
 
-      inline capture_e refresh(file_t *file, egl::surface_descriptor_t *sd, std::optional<std::chrono::steady_clock::time_point> &frame_timestamp, std::optional<std::chrono::steady_clock::time_point> vblank_timestamp = std::nullopt) {
+      inline capture_e refresh(file_t *file, egl::surface_descriptor_t *sd, std::optional<std::chrono::steady_clock::time_point> &frame_timestamp) {
         // Check for a change in HDR metadata
         if (connector_id) {
           auto connector_props = card.connector_props(*connector_id);
@@ -1050,7 +1045,7 @@ namespace platf {
         }
 
         plane_t plane = drmModeGetPlane(card.fd.el, plane_id);
-        frame_timestamp = vblank_timestamp.value_or(std::chrono::steady_clock::now());
+        frame_timestamp = std::chrono::steady_clock::now();
 
         auto fb = card.fb(plane.get());
         if (!fb) {
@@ -1166,53 +1161,21 @@ namespace platf {
         sleep_overshoot_logger.reset();
 
         while (true) {
-          std::optional<std::chrono::steady_clock::time_point> vblank_timestamp;
+          auto now = std::chrono::steady_clock::now();
 
-          if (config::video.kms_vblank) {
-            // Wait for vblank and use its timestamp
-            drmVBlank vbl = {};
-            vbl.request.type = (drmVBlankSeqType)(DRM_VBLANK_RELATIVE | (crtc_index << DRM_VBLANK_HIGH_CRTC_SHIFT));
-            vbl.request.sequence = 1;
-            if (drmWaitVBlank(card.fd.el, &vbl) == 0) {
-              // DRM vblank time is CLOCK_MONOTONIC, same as steady_clock on Linux
-              auto vblank_time = std::chrono::seconds(vbl.reply.tval_sec) + std::chrono::microseconds(vbl.reply.tval_usec);
-              vblank_timestamp = std::chrono::steady_clock::time_point(std::chrono::duration_cast<std::chrono::steady_clock::duration>(vblank_time));
-              
-              // Skip frame if display Hz > client FPS (e.g., 120Hz display, 60fps stream)
-              auto now = std::chrono::steady_clock::now();
-              if (now < next_frame) {
-                continue;  // Skip this vblank, wait for next one
-              }
-              next_frame = now + delay;
-            } else {
-              // Vblank wait failed, fall back to timer-based delay
-              auto now = std::chrono::steady_clock::now();
-              if (next_frame > now) {
-                std::this_thread::sleep_for(next_frame - now);
-              }
-              next_frame += delay;
-              if (next_frame < now) {
-                next_frame = now + delay;
-              }
-            }
-          } else {
-            // Timer-based delay
-            auto now = std::chrono::steady_clock::now();
+          if (next_frame > now) {
+            std::this_thread::sleep_for(next_frame - now);
+            sleep_overshoot_logger.first_point(next_frame);
+            sleep_overshoot_logger.second_point_now_and_log();
+          }
 
-            if (next_frame > now) {
-              std::this_thread::sleep_for(next_frame - now);
-              sleep_overshoot_logger.first_point(next_frame);
-              sleep_overshoot_logger.second_point_now_and_log();
-            }
-
-            next_frame += delay;
-            if (next_frame < now) {  // some major slowdown happened; we couldn't keep up
-              next_frame = now + delay;
-            }
+          next_frame += delay;
+          if (next_frame < now) {  // some major slowdown happened; we couldn't keep up
+            next_frame = now + delay;
           }
 
           std::shared_ptr<platf::img_t> img_out;
-          auto status = snapshot(pull_free_image_cb, img_out, 1000ms, *cursor, vblank_timestamp);
+          auto status = snapshot(pull_free_image_cb, img_out, 1000ms, *cursor);
           switch (status) {
             case platf::capture_e::reinit:
             case platf::capture_e::error:
@@ -1241,12 +1204,6 @@ namespace platf {
 #ifdef SUNSHINE_BUILD_VAAPI
         if (mem_type == mem_type_e::vaapi) {
           return va::make_avcodec_encode_device(width, height, false);
-        }
-#endif
-
-#ifdef SUNSHINE_BUILD_VULKAN
-        if (mem_type == mem_type_e::vulkan) {
-          return vk::make_avcodec_encode_device_ram(width, height);
         }
 #endif
 
@@ -1307,13 +1264,13 @@ namespace platf {
         }
       }
 
-      capture_e snapshot(const pull_free_image_cb_t &pull_free_image_cb, std::shared_ptr<platf::img_t> &img_out, std::chrono::milliseconds timeout, bool cursor, std::optional<std::chrono::steady_clock::time_point> vblank_timestamp = std::nullopt) {
+      capture_e snapshot(const pull_free_image_cb_t &pull_free_image_cb, std::shared_ptr<platf::img_t> &img_out, std::chrono::milliseconds timeout, bool cursor) {
         file_t fb_fd[4];
 
         egl::surface_descriptor_t sd;
 
         std::optional<std::chrono::steady_clock::time_point> frame_timestamp;
-        auto status = refresh(fb_fd, &sd, frame_timestamp, vblank_timestamp);
+        auto status = refresh(fb_fd, &sd, frame_timestamp);
         if (status != capture_e::ok) {
           return status;
         }
@@ -1382,12 +1339,6 @@ namespace platf {
         }
 #endif
 
-#ifdef SUNSHINE_BUILD_VULKAN
-        if (mem_type == mem_type_e::vulkan) {
-          return vk::make_avcodec_encode_device_vram(width, height, img_offset_x, img_offset_y);
-        }
-#endif
-
 #ifdef SUNSHINE_BUILD_CUDA
         if (mem_type == mem_type_e::cuda) {
           return cuda::make_avcodec_gl_encode_device(width, height, img_offset_x, img_offset_y);
@@ -1424,51 +1375,21 @@ namespace platf {
         sleep_overshoot_logger.reset();
 
         while (true) {
-          std::optional<std::chrono::steady_clock::time_point> vblank_timestamp;
+          auto now = std::chrono::steady_clock::now();
 
-          if (config::video.kms_vblank) {
-            // Wait for vblank and use its timestamp
-            drmVBlank vbl = {};
-            vbl.request.type = (drmVBlankSeqType)(DRM_VBLANK_RELATIVE | (crtc_index << DRM_VBLANK_HIGH_CRTC_SHIFT));
-            vbl.request.sequence = 1;
-            if (drmWaitVBlank(card.fd.el, &vbl) == 0) {
-              auto vblank_time = std::chrono::seconds(vbl.reply.tval_sec) + std::chrono::microseconds(vbl.reply.tval_usec);
-              vblank_timestamp = std::chrono::steady_clock::time_point(std::chrono::duration_cast<std::chrono::steady_clock::duration>(vblank_time));
-              
-              // Skip frame if display Hz > client FPS (e.g., 120Hz display, 60fps stream)
-              auto now = std::chrono::steady_clock::now();
-              if (now < next_frame) {
-                continue;  // Skip this vblank, wait for next one
-              }
-              next_frame = now + delay;
-            } else {
-              // Vblank wait failed, fall back to timer-based delay
-              auto now = std::chrono::steady_clock::now();
-              if (next_frame > now) {
-                std::this_thread::sleep_for(next_frame - now);
-              }
-              next_frame += delay;
-              if (next_frame < now) {
-                next_frame = now + delay;
-              }
-            }
-          } else {
-            auto now = std::chrono::steady_clock::now();
+          if (next_frame > now) {
+            std::this_thread::sleep_for(next_frame - now);
+            sleep_overshoot_logger.first_point(next_frame);
+            sleep_overshoot_logger.second_point_now_and_log();
+          }
 
-            if (next_frame > now) {
-              std::this_thread::sleep_for(next_frame - now);
-              sleep_overshoot_logger.first_point(next_frame);
-              sleep_overshoot_logger.second_point_now_and_log();
-            }
-
-            next_frame += delay;
-            if (next_frame < now) {  // some major slowdown happened; we couldn't keep up
-              next_frame = now + delay;
-            }
+          next_frame += delay;
+          if (next_frame < now) {  // some major slowdown happened; we couldn't keep up
+            next_frame = now + delay;
           }
 
           std::shared_ptr<platf::img_t> img_out;
-          auto status = snapshot(pull_free_image_cb, img_out, 1000ms, *cursor, vblank_timestamp);
+          auto status = snapshot(pull_free_image_cb, img_out, 1000ms, *cursor);
           switch (status) {
             case platf::capture_e::reinit:
             case platf::capture_e::error:
@@ -1493,7 +1414,7 @@ namespace platf {
         return capture_e::ok;
       }
 
-      capture_e snapshot(const pull_free_image_cb_t &pull_free_image_cb, std::shared_ptr<platf::img_t> &img_out, std::chrono::milliseconds /* timeout */, bool cursor, std::optional<std::chrono::steady_clock::time_point> vblank_timestamp = std::nullopt) {
+      capture_e snapshot(const pull_free_image_cb_t &pull_free_image_cb, std::shared_ptr<platf::img_t> &img_out, std::chrono::milliseconds /* timeout */, bool cursor) {
         file_t fb_fd[4];
 
         if (!pull_free_image_cb(img_out)) {
@@ -1502,7 +1423,7 @@ namespace platf {
         auto img = (egl::img_descriptor_t *) img_out.get();
         img->reset();
 
-        auto status = refresh(fb_fd, &img->sd, img->frame_timestamp, vblank_timestamp);
+        auto status = refresh(fb_fd, &img->sd, img->frame_timestamp);
         if (status != capture_e::ok) {
           return status;
         }
@@ -1563,11 +1484,7 @@ namespace platf {
   }  // namespace kms
 
   std::shared_ptr<display_t> kms_display(mem_type_e hwdevice_type, const std::string &display_name, const ::video::config_t &config) {
-    if (hwdevice_type == mem_type_e::vaapi ||
-#ifdef SUNSHINE_BUILD_VULKAN
-        hwdevice_type == mem_type_e::vulkan ||
-#endif
-        hwdevice_type == mem_type_e::cuda) {
+    if (hwdevice_type == mem_type_e::vaapi || hwdevice_type == mem_type_e::cuda) {
       auto disp = std::make_shared<kms::display_vram_t>(hwdevice_type);
 
       if (!disp->init(display_name, config)) {
