@@ -1528,8 +1528,8 @@ namespace video {
     avcodec_ctx_t ctx;
     for (int retries = 0; retries < 2; retries++) {
       ctx.reset(avcodec_alloc_context3(codec));
-      ctx->width = config.width;
-      ctx->height = config.height;
+      ctx->width = width;
+      ctx->height = height;
       ctx->time_base = AVRational {1, config.framerate};
       ctx->framerate = AVRational {config.framerate, 1};
       if (config.framerateX100 > 0) {
