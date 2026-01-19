@@ -685,11 +685,13 @@ namespace platf::pipewire {
     int dummy_img(img_t *img) override { return 0; }
 
     std::unique_ptr<avcodec_encode_device_t> make_avcodec_encode_device(pix_fmt_e pix_fmt) override {
+#ifdef SUNSHINE_BUILD_VULKAN
+      if (config::video.encoder == "vulkan") {
+        return vk::make_avcodec_encode_device_vram(width, height, 0, 0);
+      }
+#endif
 #ifdef SUNSHINE_BUILD_VAAPI
       return va::make_avcodec_encode_device(width, height, 0, 0, true);
-#endif
-#ifdef SUNSHINE_BUILD_VULKAN
-      return vk::make_avcodec_encode_device_vram(width, height, 0, 0);
 #endif
       return std::make_unique<avcodec_encode_device_t>();
     }
