@@ -26,6 +26,9 @@
 #include "src/config.h"
 #include "graphics.h"
 #include "vaapi.h"
+#ifdef SUNSHINE_BUILD_VULKAN
+#include "vulkan_encode.h"
+#endif
 
 using namespace std::literals;
 
@@ -597,6 +600,11 @@ namespace platf::pipewire {
 #ifdef SUNSHINE_BUILD_VAAPI
       if (mem_type == mem_type_e::vaapi) {
         return va::make_avcodec_encode_device(width, height, false);
+      }
+#endif
+#ifdef SUNSHINE_BUILD_VULKAN
+      if (mem_type == mem_type_e::vulkan) {
+        return vk::make_avcodec_encode_device_ram(width, height);
       }
 #endif
       return std::make_unique<avcodec_encode_device_t>();
