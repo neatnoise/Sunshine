@@ -490,7 +490,7 @@ namespace config {
     {},  // encoder
     {},  // adapter_name
     {},  // output_name
-    false,  // kms_vblank
+    true,  // kms_vblank
 
     {
       2,  // vk.tune (default: ll - low latency)
