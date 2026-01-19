@@ -972,6 +972,10 @@ namespace video {
       // AV1
       {
         {"idr_interval"s, std::numeric_limits<int>::max()},
+        {"tune"s, &config::video.vk.tune},
+        {"rc_mode"s, &config::video.vk.rc_mode},
+        {"usage"s, "stream"s},
+        {"content"s, "rendered"s},
       },
       {},  // SDR-specific options
       {},  // HDR-specific options
@@ -984,6 +988,10 @@ namespace video {
       // HEVC
       {
         {"idr_interval"s, std::numeric_limits<int>::max()},
+        {"tune"s, &config::video.vk.tune},
+        {"rc_mode"s, &config::video.vk.rc_mode},
+        {"usage"s, "stream"s},
+        {"content"s, "rendered"s},
       },
       {},  // SDR-specific options
       {},  // HDR-specific options
@@ -996,6 +1004,10 @@ namespace video {
       // H.264
       {
         {"idr_interval"s, std::numeric_limits<int>::max()},
+        {"tune"s, &config::video.vk.tune},
+        {"rc_mode"s, &config::video.vk.rc_mode},
+        {"usage"s, "stream"s},
+        {"content"s, "rendered"s},
       },
       {},  // SDR-specific options
       {},  // HDR-specific options

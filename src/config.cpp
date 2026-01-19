@@ -493,6 +493,11 @@ namespace config {
     false,  // kms_vblank
 
     {
+      2,  // vk.tune (default: ll - low latency)
+      0,  // vk.rc_mode (default: auto)
+    },
+
+    {
       video_t::dd_t::config_option_e::disabled,  // configuration_option
       video_t::dd_t::resolution_option_e::automatic,  // resolution_option
       {},  // manual_resolution
@@ -1122,6 +1127,9 @@ namespace config {
     string_f(vars, "adapter_name", video.adapter_name);
     string_f(vars, "output_name", video.output_name);
     bool_f(vars, "kms_vblank", video.kms_vblank);
+
+    int_f(vars, "vk_tune", video.vk.tune);
+    int_f(vars, "vk_rc_mode", video.vk.rc_mode);
 
     generic_f(vars, "dd_configuration_option", video.dd.configuration_option, dd::config_option_from_view);
     generic_f(vars, "dd_resolution_option", video.dd.resolution_option, dd::resolution_option_from_view);

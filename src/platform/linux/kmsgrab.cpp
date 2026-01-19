@@ -1037,7 +1037,7 @@ namespace platf {
         }
       }
 
-      inline capture_e refresh(file_t *file, egl::surface_descriptor_t *sd, std::optional<std::chrono::steady_clock::time_point> &frame_timestamp) {
+      inline capture_e refresh(file_t *file, egl::surface_descriptor_t *sd, std::optional<std::chrono::steady_clock::time_point> &frame_timestamp, std::optional<std::chrono::steady_clock::time_point> vblank_timestamp = std::nullopt) {
         // Check for a change in HDR metadata
         if (connector_id) {
           auto connector_props = card.connector_props(*connector_id);
@@ -1048,7 +1048,7 @@ namespace platf {
         }
 
         plane_t plane = drmModeGetPlane(card.fd.el, plane_id);
-        frame_timestamp = std::chrono::steady_clock::now();
+        frame_timestamp = vblank_timestamp.value_or(std::chrono::steady_clock::now());
 
         auto fb = card.fb(plane.get());
         if (!fb) {
@@ -1164,12 +1164,18 @@ namespace platf {
         sleep_overshoot_logger.reset();
 
         while (true) {
+          std::optional<std::chrono::steady_clock::time_point> vblank_timestamp;
+
           if (config::video.kms_vblank) {
-            // Wait for vblank (replaces timer-based delay)
+            // Wait for vblank and use its timestamp
             drmVBlank vbl = {};
             vbl.request.type = (drmVBlankSeqType)(DRM_VBLANK_RELATIVE | (crtc_index << DRM_VBLANK_HIGH_CRTC_SHIFT));
             vbl.request.sequence = 1;
-            drmWaitVBlank(card.fd.el, &vbl);
+            if (drmWaitVBlank(card.fd.el, &vbl) == 0) {
+              // DRM vblank time is CLOCK_MONOTONIC, same as steady_clock on Linux
+              auto vblank_time = std::chrono::seconds(vbl.reply.tval_sec) + std::chrono::microseconds(vbl.reply.tval_usec);
+              vblank_timestamp = std::chrono::steady_clock::time_point(std::chrono::duration_cast<std::chrono::steady_clock::duration>(vblank_time));
+            }
           } else {
             // Timer-based delay
             auto now = std::chrono::steady_clock::now();
@@ -1187,7 +1193,7 @@ namespace platf {
           }
 
           std::shared_ptr<platf::img_t> img_out;
-          auto status = snapshot(pull_free_image_cb, img_out, 1000ms, *cursor);
+          auto status = snapshot(pull_free_image_cb, img_out, 1000ms, *cursor, vblank_timestamp);
           switch (status) {
             case platf::capture_e::reinit:
             case platf::capture_e::error:
@@ -1280,13 +1286,13 @@ namespace platf {
         }
       }
 
-      capture_e snapshot(const pull_free_image_cb_t &pull_free_image_cb, std::shared_ptr<platf::img_t> &img_out, std::chrono::milliseconds timeout, bool cursor) {
+      capture_e snapshot(const pull_free_image_cb_t &pull_free_image_cb, std::shared_ptr<platf::img_t> &img_out, std::chrono::milliseconds timeout, bool cursor, std::optional<std::chrono::steady_clock::time_point> vblank_timestamp = std::nullopt) {
         file_t fb_fd[4];
 
         egl::surface_descriptor_t sd;
 
         std::optional<std::chrono::steady_clock::time_point> frame_timestamp;
-        auto status = refresh(fb_fd, &sd, frame_timestamp);
+        auto status = refresh(fb_fd, &sd, frame_timestamp, vblank_timestamp);
         if (status != capture_e::ok) {
           return status;
         }
