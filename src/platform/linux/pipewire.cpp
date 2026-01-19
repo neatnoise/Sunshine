@@ -551,14 +551,22 @@ namespace platf::pipewire {
                       const pull_free_image_cb_t &pull_free_image_cb, bool *cursor) override {
       auto next_frame_time = std::chrono::steady_clock::now();
       while (g_pw_state.running) {
+        // Wait until next frame time
+        auto now = std::chrono::steady_clock::now();
+        if (now < next_frame_time) {
+          std::this_thread::sleep_until(next_frame_time);
+        }
+        next_frame_time = std::chrono::steady_clock::now() + frame_duration;
+
         std::shared_ptr<platf::img_t> img_out;
         if (!pull_free_image_cb(img_out)) return capture_e::interrupted;
 
         bool frame_copied = false;
         {
           std::unique_lock<std::mutex> lock(g_pw_state.mtx);
-          if (!g_pw_state.cv.wait_for(lock, 100ms, [] { return g_pw_state.current_frame.valid || !g_pw_state.running; })) {
-            continue;
+          // Wait briefly for a frame if none available
+          if (!g_pw_state.current_frame.valid) {
+            g_pw_state.cv.wait_for(lock, 16ms, [] { return g_pw_state.current_frame.valid || !g_pw_state.running; });
           }
           if (!g_pw_state.running) return capture_e::interrupted;
           if (!g_pw_state.current_frame.valid) continue;
@@ -576,16 +584,8 @@ namespace platf::pipewire {
           }
         }
 
-        if (frame_copied) {
-          auto now = std::chrono::steady_clock::now();
-          if (now < next_frame_time) {
-            std::this_thread::sleep_until(next_frame_time);
-          }
-          next_frame_time = std::chrono::steady_clock::now() + frame_duration;
-          
-          if (!push_captured_image_cb(std::move(img_out), true)) {
-            return capture_e::ok;
-          }
+        if (frame_copied && !push_captured_image_cb(std::move(img_out), true)) {
+          return capture_e::ok;
         }
       }
       return capture_e::ok;
@@ -658,26 +658,27 @@ namespace platf::pipewire {
                       const pull_free_image_cb_t &pull_free_image_cb, bool *cursor) override {
       auto next_frame_time = std::chrono::steady_clock::now();
       while (g_pw_state.running) {
+        // Wait until next frame time
+        auto now = std::chrono::steady_clock::now();
+        if (now < next_frame_time) {
+          std::this_thread::sleep_until(next_frame_time);
+        }
+        next_frame_time = std::chrono::steady_clock::now() + frame_duration;
+
         std::shared_ptr<platf::img_t> img_out;
         if (!pull_free_image_cb(img_out)) return capture_e::interrupted;
 
         bool got_frame = false;
         {
           std::unique_lock<std::mutex> lock(g_pw_state.mtx);
-          if (g_pw_state.cv.wait_for(lock, 100ms, [] { return g_pw_state.current_frame.valid || !g_pw_state.running; })) {
-            if (!g_pw_state.running) return capture_e::interrupted;
-            if (g_pw_state.current_frame.valid) {
-              got_frame = fill_image(img_out);
-            }
+          // Wait briefly for a frame if none available
+          if (!g_pw_state.current_frame.valid) {
+            g_pw_state.cv.wait_for(lock, 16ms, [] { return g_pw_state.current_frame.valid || !g_pw_state.running; });
           }
-        }
-
-        if (got_frame) {
-          auto now = std::chrono::steady_clock::now();
-          if (now < next_frame_time) {
-            std::this_thread::sleep_until(next_frame_time);
+          if (!g_pw_state.running) return capture_e::interrupted;
+          if (g_pw_state.current_frame.valid) {
+            got_frame = fill_image(img_out);
           }
-          next_frame_time = std::chrono::steady_clock::now() + frame_duration;
         }
 
         if (!push_captured_image_cb(std::move(img_out), got_frame)) return capture_e::ok;
