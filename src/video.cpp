@@ -976,6 +976,7 @@ namespace video {
         {"rc_mode"s, &config::video.vk.rc_mode},
         {"usage"s, "stream"s},
         {"content"s, "rendered"s},
+        {"async_depth"s, 1},
       },
       {},  // SDR-specific options
       {},  // HDR-specific options
@@ -992,6 +993,7 @@ namespace video {
         {"rc_mode"s, &config::video.vk.rc_mode},
         {"usage"s, "stream"s},
         {"content"s, "rendered"s},
+        {"async_depth"s, 1},
       },
       {},  // SDR-specific options
       {},  // HDR-specific options
@@ -1008,6 +1010,7 @@ namespace video {
         {"rc_mode"s, &config::video.vk.rc_mode},
         {"usage"s, "stream"s},
         {"content"s, "rendered"s},
+        {"async_depth"s, 1},
       },
       {},  // SDR-specific options
       {},  // HDR-specific options
