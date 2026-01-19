@@ -1603,8 +1603,8 @@ namespace video {
     avcodec_ctx_t ctx;
     for (int retries = 0; retries < 2; retries++) {
       ctx.reset(avcodec_alloc_context3(codec));
-      ctx->width = config.width;
-      ctx->height = config.height;
+      ctx->width = width;
+      ctx->height = height;
       ctx->time_base = AVRational {1, config.framerate};
       ctx->framerate = AVRational {config.framerate, 1};
       if (config.framerateX100 > 0) {
@@ -2162,6 +2162,10 @@ namespace video {
     sync_session_t encode_session;
 
     encode_session.ctx = &ctx;
+
+    // Update display dimensions from actual captured image to ensure encoder uses correct size
+    disp->width = img.width;
+    disp->height = img.height;
 
     auto encode_device = make_encode_device(*disp, encoder, ctx.config);
     if (!encode_device) {
