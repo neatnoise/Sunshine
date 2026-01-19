@@ -494,7 +494,6 @@ namespace config {
     {},  // encoder
     {},  // adapter_name
     {},  // output_name
-    true,  // kms_vblank
 
     {
       2,  // vk.tune (default: ll - low latency)
@@ -1132,7 +1131,6 @@ namespace config {
     string_f(vars, "encoder", video.encoder);
     string_f(vars, "adapter_name", video.adapter_name);
     string_f(vars, "output_name", video.output_name);
-    bool_f(vars, "kms_vblank", video.kms_vblank);
 
     int_f(vars, "vk_tune", video.vk.tune);
     int_f(vars, "vk_rc_mode", video.vk.rc_mode);

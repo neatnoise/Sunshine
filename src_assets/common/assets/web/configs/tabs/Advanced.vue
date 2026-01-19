@@ -122,18 +122,6 @@ const config = ref(props.config)
       <div class="form-text">{{ $t('config.encoder_desc') }}</div>
     </div>
 
-    <!-- KMS VBlank (Linux only) -->
-    <PlatformLayout :platform="platform">
-      <template #linux>
-        <Checkbox class="mb-3"
-                  id="kms_vblank"
-                  locale-prefix="config"
-                  v-model="config.kms_vblank"
-                  default="true"
-        ></Checkbox>
-      </template>
-    </PlatformLayout>
-
   </div>
 </template>
 
