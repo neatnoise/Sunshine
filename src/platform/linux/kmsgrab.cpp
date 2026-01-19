@@ -1401,21 +1401,34 @@ namespace platf {
         sleep_overshoot_logger.reset();
 
         while (true) {
-          auto now = std::chrono::steady_clock::now();
+          std::optional<std::chrono::steady_clock::time_point> vblank_timestamp;
 
-          if (next_frame > now) {
-            std::this_thread::sleep_for(next_frame - now);
-            sleep_overshoot_logger.first_point(next_frame);
-            sleep_overshoot_logger.second_point_now_and_log();
-          }
+          if (config::video.kms_vblank) {
+            // Wait for vblank and use its timestamp
+            drmVBlank vbl = {};
+            vbl.request.type = (drmVBlankSeqType)(DRM_VBLANK_RELATIVE | (crtc_index << DRM_VBLANK_HIGH_CRTC_SHIFT));
+            vbl.request.sequence = 1;
+            if (drmWaitVBlank(card.fd.el, &vbl) == 0) {
+              auto vblank_time = std::chrono::seconds(vbl.reply.tval_sec) + std::chrono::microseconds(vbl.reply.tval_usec);
+              vblank_timestamp = std::chrono::steady_clock::time_point(std::chrono::duration_cast<std::chrono::steady_clock::duration>(vblank_time));
+            }
+          } else {
+            auto now = std::chrono::steady_clock::now();
 
-          next_frame += delay;
-          if (next_frame < now) {  // some major slowdown happened; we couldn't keep up
-            next_frame = now + delay;
+            if (next_frame > now) {
+              std::this_thread::sleep_for(next_frame - now);
+              sleep_overshoot_logger.first_point(next_frame);
+              sleep_overshoot_logger.second_point_now_and_log();
+            }
+
+            next_frame += delay;
+            if (next_frame < now) {  // some major slowdown happened; we couldn't keep up
+              next_frame = now + delay;
+            }
           }
 
           std::shared_ptr<platf::img_t> img_out;
-          auto status = snapshot(pull_free_image_cb, img_out, 1000ms, *cursor);
+          auto status = snapshot(pull_free_image_cb, img_out, 1000ms, *cursor, vblank_timestamp);
           switch (status) {
             case platf::capture_e::reinit:
             case platf::capture_e::error:
@@ -1440,7 +1453,7 @@ namespace platf {
         return capture_e::ok;
       }
 
-      capture_e snapshot(const pull_free_image_cb_t &pull_free_image_cb, std::shared_ptr<platf::img_t> &img_out, std::chrono::milliseconds /* timeout */, bool cursor) {
+      capture_e snapshot(const pull_free_image_cb_t &pull_free_image_cb, std::shared_ptr<platf::img_t> &img_out, std::chrono::milliseconds /* timeout */, bool cursor, std::optional<std::chrono::steady_clock::time_point> vblank_timestamp = std::nullopt) {
         file_t fb_fd[4];
 
         if (!pull_free_image_cb(img_out)) {
@@ -1449,7 +1462,7 @@ namespace platf {
         auto img = (egl::img_descriptor_t *) img_out.get();
         img->reset();
 
-        auto status = refresh(fb_fd, &img->sd, img->frame_timestamp);
+        auto status = refresh(fb_fd, &img->sd, img->frame_timestamp, vblank_timestamp);
         if (status != capture_e::ok) {
           return status;
         }
