@@ -147,8 +147,6 @@
     "channels": "Maksimum Bağlı İstemci",
     "channels_desc_1": "Sunshine, tek bir akış oturumunun aynı anda birden fazla istemci ile paylaşılmasına izin verebilir.",
     "channels_desc_2": "Bazı donanım kodlayıcıları, birden fazla akışla performansı düşüren sınırlamalara sahip olabilir.",
-    "pipewire_persist_session": "PipeWire Persist Session",
-    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- bağlama uyarlanabi̇li̇r i̇ki̇li̇ ari̇tmeti̇k kodlama - daha yüksek kali̇te",
     "coder_cavlc": "cavlc -- bağlam uyarlamalı değişken uzunluklu kodlama - daha hızlı kod çözme",
     "configuration": "Konfigürasyon",
@@ -378,7 +376,11 @@
     "wan_encryption_mode": "WAN Şifreleme Modu",
     "wan_encryption_mode_1": "Desteklenen istemciler için etkin (varsayılan)",
     "wan_encryption_mode_2": "Tüm istemciler için gerekli",
-    "wan_encryption_mode_desc": "Bu, İnternet üzerinden akış yaparken şifrelemenin ne zaman kullanılacağını belirler. Şifreleme, özellikle daha az güçlü ana bilgisayarlarda ve istemcilerde akış performansını düşürebilir."
+    "wan_encryption_mode_desc": "Bu, İnternet üzerinden akış yaparken şifrelemenin ne zaman kullanılacağını belirler. Şifreleme, özellikle daha az güçlü ana bilgisayarlarda ve istemcilerde akış performansını düşürebilir.",
+    "vk_tune": "Tuning",
+    "vk_tune_desc": "Low latency modes reduce encoding delay at the cost of quality.",
+    "vk_rc_mode": "Rate Control",
+    "vk_rc_mode_desc": "Rate control mode for encoding. Auto lets the driver decide."
   },
   "index": {
     "description": "Sunshine, Moonlight için kendi kendine barındırılan bir oyun akışı sunucusudur.",

@@ -147,8 +147,6 @@
     "channels": "Nombre maximum de clients connectés",
     "channels_desc_1": "Sunshine peut permettre à une seule session de streaming d'être partagée simultanément avec plusieurs clients.",
     "channels_desc_2": "Certains encodeurs matériels peuvent avoir des limitations qui réduisent les performances avec plusieurs flux.",
-    "pipewire_persist_session": "PipeWire Persist Session",
-    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- contexte de codage arithmétique binaire adaptatif - qualité supérieure",
     "coder_cavlc": "cavlc -- codage de la durée adaptative du contexte - décodage plus rapide",
     "configuration": "Configuration",
@@ -378,7 +376,11 @@
     "wan_encryption_mode": "Mode de chiffrement WAN",
     "wan_encryption_mode_1": "Activé pour les clients pris en charge (par défaut)",
     "wan_encryption_mode_2": "Obligatoire pour tous les clients",
-    "wan_encryption_mode_desc": "Ceci détermine quand le chiffrement sera utilisé lors du streaming par Internet. Le chiffrement peut réduire les performances de streaming, en particulier sur les hôtes et clients moins puissants."
+    "wan_encryption_mode_desc": "Ceci détermine quand le chiffrement sera utilisé lors du streaming par Internet. Le chiffrement peut réduire les performances de streaming, en particulier sur les hôtes et clients moins puissants.",
+    "vk_tune": "Tuning",
+    "vk_tune_desc": "Low latency modes reduce encoding delay at the cost of quality.",
+    "vk_rc_mode": "Rate Control",
+    "vk_rc_mode_desc": "Rate control mode for encoding. Auto lets the driver decide."
   },
   "index": {
     "description": "Sunshine est un serveur de streaming auto-hébergé pour Moonlight.",

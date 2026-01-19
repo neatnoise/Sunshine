@@ -147,8 +147,6 @@
     "channels": "Максимален брой свързани клиенти",
     "channels_desc_1": "Sunshine може да позволи една сесия за поточно предаване да бъде споделена с множество клиенти едновременно.",
     "channels_desc_2": "Някои методи за хардуерно кодиране могат да имат ограничения, които намаляват производителността при излъчване на повече от един поток.",
-    "pipewire_persist_session": "PipeWire Persist Session",
-    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac – контекстно-адаптивно двоично аритметично кодиране – по-високо качество",
     "coder_cavlc": "cavlc – контекстно адаптивно кодиране с променлива дължина – по-бързо декодиране",
     "configuration": "Настройки",
@@ -378,7 +376,11 @@
     "wan_encryption_mode": "Режим на шифроване в WAN",
     "wan_encryption_mode_1": "Включено за поддържаните клиенти (по подразбиране)",
     "wan_encryption_mode_2": "Задължително за всички клиенти",
-    "wan_encryption_mode_desc": "Това определя дали да се използва шифроване при излъчване през Интернет. Шифроването може да намали производителността на излъчването, особено при не особено мощни сървъри и клиенти."
+    "wan_encryption_mode_desc": "Това определя дали да се използва шифроване при излъчване през Интернет. Шифроването може да намали производителността на излъчването, особено при не особено мощни сървъри и клиенти.",
+    "vk_tune": "Tuning",
+    "vk_tune_desc": "Low latency modes reduce encoding delay at the cost of quality.",
+    "vk_rc_mode": "Rate Control",
+    "vk_rc_mode_desc": "Rate control mode for encoding. Auto lets the driver decide."
   },
   "index": {
     "description": "Sunshine е сървър за собствено поточно предаване на игри, предназначен за ползване с Moonlight.",

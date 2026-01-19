@@ -147,8 +147,6 @@
     "channels": "Maximalt antal anslutna klienter",
     "channels_desc_1": "Sunshine kan tillåta en enda streaming-session att delas med flera klienter samtidigt.",
     "channels_desc_2": "Vissa hårdvarukodare kan ha begränsningar som minskar prestandan med flera strömmar.",
-    "pipewire_persist_session": "PipeWire Persist Session",
-    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac – kontext adaptiv binär aritmetisk kodning - högre kvalitet",
     "coder_cavlc": "cavlc – sammanhangsberoende kodning med variabellängd - snabbare avkodning",
     "configuration": "Konfiguration",
@@ -378,7 +376,11 @@
     "wan_encryption_mode": "WAN krypteringsläge",
     "wan_encryption_mode_1": "Aktiverad för stödda klienter (standard)",
     "wan_encryption_mode_2": "Krävs för alla kunder",
-    "wan_encryption_mode_desc": "Detta avgör när kryptering kommer att användas vid strömning över Internet. Kryptering kan minska strömningsprestanda, särskilt på mindre kraftfulla värdar och klienter."
+    "wan_encryption_mode_desc": "Detta avgör när kryptering kommer att användas vid strömning över Internet. Kryptering kan minska strömningsprestanda, särskilt på mindre kraftfulla värdar och klienter.",
+    "vk_tune": "Tuning",
+    "vk_tune_desc": "Low latency modes reduce encoding delay at the cost of quality.",
+    "vk_rc_mode": "Rate Control",
+    "vk_rc_mode_desc": "Rate control mode for encoding. Auto lets the driver decide."
   },
   "index": {
     "description": "Solsken är en själv-värd spel ström värd för Moonlight.",

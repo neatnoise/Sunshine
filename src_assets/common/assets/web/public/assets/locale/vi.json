@@ -147,8 +147,6 @@
     "channels": "Số lượng khách hàng kết nối tối đa",
     "channels_desc_1": "Ánh sáng mặt trời cho phép một phiên phát trực tuyến duy nhất được chia sẻ đồng thời với nhiều khách hàng.",
     "channels_desc_2": "Một số bộ mã hóa phần cứng có thể có các hạn chế làm giảm hiệu suất khi xử lý nhiều luồng.",
-    "pipewire_persist_session": "PipeWire Persist Session",
-    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- Mã hóa nhị phân thích ứng theo ngữ cảnh - Chất lượng cao hơn",
     "coder_cavlc": "cavlc -- Mã hóa độ dài biến đổi thích ứng với ngữ cảnh - Giải mã nhanh hơn",
     "configuration": "Cấu hình",
@@ -378,7 +376,11 @@
     "wan_encryption_mode": "Chế độ mã hóa WAN",
     "wan_encryption_mode_1": "Được kích hoạt cho các khách hàng được hỗ trợ (mặc định)",
     "wan_encryption_mode_2": "Yêu cầu đối với tất cả khách hàng",
-    "wan_encryption_mode_desc": "Điều này xác định thời điểm mã hóa sẽ được sử dụng khi truyền phát qua Internet. Mã hóa có thể làm giảm hiệu suất truyền phát, đặc biệt là trên các máy chủ và thiết bị khách có cấu hình yếu."
+    "wan_encryption_mode_desc": "Điều này xác định thời điểm mã hóa sẽ được sử dụng khi truyền phát qua Internet. Mã hóa có thể làm giảm hiệu suất truyền phát, đặc biệt là trên các máy chủ và thiết bị khách có cấu hình yếu.",
+    "vk_tune": "Tuning",
+    "vk_tune_desc": "Low latency modes reduce encoding delay at the cost of quality.",
+    "vk_rc_mode": "Rate Control",
+    "vk_rc_mode_desc": "Rate control mode for encoding. Auto lets the driver decide."
   },
   "index": {
     "description": "Sunshine là một nền tảng phát trực tiếp game tự chủ cho Moonlight.",

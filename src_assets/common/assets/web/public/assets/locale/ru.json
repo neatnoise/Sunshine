@@ -147,8 +147,6 @@
     "channels": "Максимальное число подключенных клиентов",
     "channels_desc_1": "Sunshine позволяет одновременное совместное использование одного сеанса потокового вещания.",
     "channels_desc_2": "Некоторые аппаратные кодировщики могут иметь ограничения, уменьшающие производительность с несколькими потоками.",
-    "pipewire_persist_session": "PipeWire Persist Session",
-    "pipewire_persist_session_desc": "Remember the selected capture source to avoid the portal prompt on future connections.",
     "coder_cabac": "cabac -- контекстная адаптивная арифметическая кодировка - более высокое качество",
     "coder_cavlc": "cavlc -- контекстное адаптивное кодирование переменной длины - ускорение декодирования",
     "configuration": "Конфигурация",
@@ -378,7 +376,11 @@
     "wan_encryption_mode": "Режим шифрования WAN",
     "wan_encryption_mode_1": "Включено для поддерживаемых клиентов (по умолчанию)",
     "wan_encryption_mode_2": "Требуется для всех клиентов",
-    "wan_encryption_mode_desc": "Определяет, когда будет использоваться шифрование при вещании через Интернет. Шифрование может снизить качество вещания, особенно на более слабых серверах и клиентах."
+    "wan_encryption_mode_desc": "Определяет, когда будет использоваться шифрование при вещании через Интернет. Шифрование может снизить качество вещания, особенно на более слабых серверах и клиентах.",
+    "vk_tune": "Tuning",
+    "vk_tune_desc": "Low latency modes reduce encoding delay at the cost of quality.",
+    "vk_rc_mode": "Rate Control",
+    "vk_rc_mode_desc": "Rate control mode for encoding. Auto lets the driver decide."
   },
   "index": {
     "description": "Sunshine - это ваш собственный сервер вещания игр для Moonlight.",
