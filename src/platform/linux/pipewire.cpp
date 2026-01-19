@@ -476,7 +476,7 @@ namespace platf::pipewire {
     const spa_pod *params[2];
     int n_params = 0;
 
-    bool use_dmabuf = config::video.encoder.empty() || config::video.encoder == "vaapi";
+    bool use_dmabuf = config::video.encoder.empty() || config::video.encoder == "vaapi" || config::video.encoder == "vulkan";
 
     if (use_dmabuf) {
       spa_pod_frame dmabuf_frame, modifier_frame;
