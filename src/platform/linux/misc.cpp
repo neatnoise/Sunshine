@@ -1049,17 +1049,17 @@ namespace platf {
       }
     }
 #endif
-#ifdef SUNSHINE_BUILD_PIPEWIRE
-    if ((config::video.capture.empty() && sources.none()) || config::video.capture == "pipewire") {
-      if (pipewire::verify()) {
-        sources[source::PIPEWIRE] = true;
-      }
-    }
-#endif
 #ifdef SUNSHINE_BUILD_DRM
     if ((config::video.capture.empty() && sources.none()) || config::video.capture == "kms") {
       if (verify_kms()) {
         sources[source::KMS] = true;
+      }
+    }
+#endif
+#ifdef SUNSHINE_BUILD_PIPEWIRE
+    if ((config::video.capture.empty() && sources.none()) || config::video.capture == "pipewire") {
+      if (pipewire::verify()) {
+        sources[source::PIPEWIRE] = true;
       }
     }
 #endif
