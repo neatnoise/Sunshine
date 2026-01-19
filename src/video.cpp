@@ -2967,7 +2967,6 @@ namespace video {
       }
     }
 
-    char string[AV_ERROR_MAX_STRING_SIZE];
     BOOST_LOG(error) << "Failed to create a Vulkan device"sv;
     return -1;
   }
