@@ -11,8 +11,6 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/hwcontext.h>
 #include <libavutil/hwcontext_vulkan.h>
-#include <libavutil/hwcontext_drm.h>
-#include <libavutil/imgutils.h>
 }
 
 #include <vulkan/vulkan.h>
