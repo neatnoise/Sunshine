@@ -127,7 +127,7 @@ namespace vk {
       // Render RGB→NV12 directly into Vulkan memory via EGL (zero-copy)
       sws.load_vram(descriptor, 0, 0, rgb->tex[0]);
       sws.convert(nv12->buf);
-      gl::ctx.Finish();
+      gl::ctx.Finish();  // Ensure EGL rendering completes before Vulkan encoder reads
 
       return 0;
     }
