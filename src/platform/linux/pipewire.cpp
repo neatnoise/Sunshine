@@ -546,11 +546,13 @@ namespace platf::pipewire {
       if (init_global_pw_state() < 0) return -1;
       width = g_pw_state.width;
       height = g_pw_state.height;
+      frame_duration = std::chrono::nanoseconds(1000000000 / config.framerate);
       return 0;
     }
 
     capture_e capture(const push_captured_image_cb_t &push_captured_image_cb,
                       const pull_free_image_cb_t &pull_free_image_cb, bool *cursor) override {
+      auto next_frame_time = std::chrono::steady_clock::now();
       while (g_pw_state.running) {
         std::shared_ptr<platf::img_t> img_out;
         if (!pull_free_image_cb(img_out)) return capture_e::interrupted;
@@ -577,8 +579,16 @@ namespace platf::pipewire {
           }
         }
 
-        if (frame_copied && !push_captured_image_cb(std::move(img_out), true)) {
-          return capture_e::ok;
+        if (frame_copied) {
+          auto now = std::chrono::steady_clock::now();
+          if (now < next_frame_time) {
+            std::this_thread::sleep_until(next_frame_time);
+          }
+          next_frame_time = std::chrono::steady_clock::now() + frame_duration;
+          
+          if (!push_captured_image_cb(std::move(img_out), true)) {
+            return capture_e::ok;
+          }
         }
       }
       return capture_e::ok;
@@ -618,6 +628,7 @@ namespace platf::pipewire {
     mem_type_e mem_type;
     int width = 0;
     int height = 0;
+    std::chrono::nanoseconds frame_duration;
   };
 
   class display_pw_vram_t: public display_t {
@@ -629,6 +640,7 @@ namespace platf::pipewire {
 
       width = g_pw_state.width;
       height = g_pw_state.height;
+      frame_duration = std::chrono::nanoseconds(1000000000 / config.framerate);
 
       auto render_device = config::video.adapter_name.empty() ? "/dev/dri/renderD128" : config::video.adapter_name.c_str();
       int fd = open(render_device, O_RDWR);
@@ -652,6 +664,7 @@ namespace platf::pipewire {
 
     capture_e capture(const push_captured_image_cb_t &push_captured_image_cb,
                       const pull_free_image_cb_t &pull_free_image_cb, bool *cursor) override {
+      auto next_frame_time = std::chrono::steady_clock::now();
       while (g_pw_state.running) {
         std::shared_ptr<platf::img_t> img_out;
         if (!pull_free_image_cb(img_out)) return capture_e::interrupted;
@@ -665,6 +678,14 @@ namespace platf::pipewire {
               got_frame = fill_image(img_out);
             }
           }
+        }
+
+        if (got_frame) {
+          auto now = std::chrono::steady_clock::now();
+          if (now < next_frame_time) {
+            std::this_thread::sleep_until(next_frame_time);
+          }
+          next_frame_time = std::chrono::steady_clock::now() + frame_duration;
         }
 
         if (!push_captured_image_cb(std::move(img_out), got_frame)) return capture_e::ok;
@@ -727,6 +748,7 @@ namespace platf::pipewire {
     int width = 0;
     int height = 0;
     uint64_t sequence = 0;
+    std::chrono::nanoseconds frame_duration;
     egl::display_t egl_display;
     egl::ctx_t ctx;
   };
