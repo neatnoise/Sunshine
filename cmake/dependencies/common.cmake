@@ -27,7 +27,7 @@ pkg_check_modules(MINIUPNP miniupnpc REQUIRED)
 include_directories(SYSTEM ${MINIUPNP_INCLUDE_DIRS})
 
 # ffmpeg pre-compiled binaries
-option(USE_SYSTEM_FFMPEG "Use system FFmpeg libraries (with bundled CBS)" OFF)
+option(USE_SYSTEM_FFMPEG "Use system FFmpeg libraries (with bundled CBS)" ON)
 
 if(USE_SYSTEM_FFMPEG)
     # Use system FFmpeg shared libs + bundled CBS headers/lib
