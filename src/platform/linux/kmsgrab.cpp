@@ -1194,6 +1194,13 @@ namespace platf {
               // DRM vblank time is CLOCK_MONOTONIC, same as steady_clock on Linux
               auto vblank_time = std::chrono::seconds(vbl.reply.tval_sec) + std::chrono::microseconds(vbl.reply.tval_usec);
               vblank_timestamp = std::chrono::steady_clock::time_point(std::chrono::duration_cast<std::chrono::steady_clock::duration>(vblank_time));
+              
+              // Skip frame if display Hz > client FPS (e.g., 120Hz display, 60fps stream)
+              auto now = std::chrono::steady_clock::now();
+              if (now < next_frame) {
+                continue;  // Skip this vblank, wait for next one
+              }
+              next_frame = now + delay;
             } else {
               // Vblank wait failed, fall back to timer-based delay
               auto now = std::chrono::steady_clock::now();
@@ -1444,6 +1451,13 @@ namespace platf {
             if (drmWaitVBlank(card.fd.el, &vbl) == 0) {
               auto vblank_time = std::chrono::seconds(vbl.reply.tval_sec) + std::chrono::microseconds(vbl.reply.tval_usec);
               vblank_timestamp = std::chrono::steady_clock::time_point(std::chrono::duration_cast<std::chrono::steady_clock::duration>(vblank_time));
+              
+              // Skip frame if display Hz > client FPS (e.g., 120Hz display, 60fps stream)
+              auto now = std::chrono::steady_clock::now();
+              if (now < next_frame) {
+                continue;  // Skip this vblank, wait for next one
+              }
+              next_frame = now + delay;
             } else {
               // Vblank wait failed, fall back to timer-based delay
               auto now = std::chrono::steady_clock::now();
