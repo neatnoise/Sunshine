@@ -2956,16 +2956,20 @@ namespace video {
       return hw_device_buf;
     }
 
-    auto render_device = config::video.adapter_name.empty() ? "/dev/dri/renderD128" : config::video.adapter_name.c_str();
-
-    auto status = av_hwdevice_ctx_create(&hw_device_buf, AV_HWDEVICE_TYPE_VULKAN, render_device, nullptr, 0);
-    if (status < 0) {
-      char string[AV_ERROR_MAX_STRING_SIZE];
-      BOOST_LOG(error) << "Failed to create a Vulkan device: "sv << av_make_error_string(string, AV_ERROR_MAX_STRING_SIZE, status);
-      return -1;
+    // For multi-GPU systems, try discrete GPU first (index 1), then fallback
+    // FFmpeg often picks integrated GPU (index 0) by default
+    const char *devices[] = {"1", "0", "2", "3", nullptr};
+    for (int i = 0; devices[i]; i++) {
+      auto status = av_hwdevice_ctx_create(&hw_device_buf, AV_HWDEVICE_TYPE_VULKAN, devices[i], nullptr, 0);
+      if (status >= 0) {
+        BOOST_LOG(info) << "Using Vulkan device index: "sv << devices[i];
+        return hw_device_buf;
+      }
     }
 
-    return hw_device_buf;
+    char string[AV_ERROR_MAX_STRING_SIZE];
+    BOOST_LOG(error) << "Failed to create a Vulkan device"sv;
+    return -1;
   }
 #endif
 

@@ -244,7 +244,16 @@ namespace vk {
 
   int vulkan_init_avcodec_hardware_input_buffer(platf::avcodec_encode_device_t *, AVBufferRef **hw_device_buf) {
     BOOST_LOG(info) << "Creating Vulkan hardware device"sv;
-    return av_hwdevice_ctx_create(hw_device_buf, AV_HWDEVICE_TYPE_VULKAN, nullptr, nullptr, 0);
+    
+    // For multi-GPU systems, try discrete GPU first (index 1), then fallback
+    const char *devices[] = {"1", "0", "2", "3", nullptr};
+    for (int i = 0; devices[i]; i++) {
+      if (av_hwdevice_ctx_create(hw_device_buf, AV_HWDEVICE_TYPE_VULKAN, devices[i], nullptr, 0) >= 0) {
+        BOOST_LOG(info) << "Using Vulkan device index: "sv << devices[i];
+        return 0;
+      }
+    }
+    return -1;
   }
 
   bool validate() {
