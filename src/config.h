@@ -80,11 +80,14 @@ namespace config {
       bool strict_rc_buffer;
     } vaapi;
 
+    struct {
+      bool persist_session;
+    } pipewire;
+
     std::string capture;
     std::string encoder;
     std::string adapter_name;
     std::string output_name;
-    bool kms_vblank;  // Wait for vblank in KMS capture
 
     struct {
       int tune;     // 0=default, 1=hq, 2=ll, 3=ull
