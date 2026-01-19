@@ -27,7 +27,28 @@ pkg_check_modules(MINIUPNP miniupnpc REQUIRED)
 include_directories(SYSTEM ${MINIUPNP_INCLUDE_DIRS})
 
 # ffmpeg pre-compiled binaries
-if(NOT DEFINED FFMPEG_PREPARED_BINARIES)
+option(USE_SYSTEM_FFMPEG "Use system FFmpeg libraries (with bundled CBS)" OFF)
+
+if(USE_SYSTEM_FFMPEG)
+    # Use system FFmpeg shared libs + bundled CBS headers/lib
+    pkg_check_modules(FFMPEG_SYSTEM REQUIRED IMPORTED_TARGET
+        libavcodec
+        libavutil
+        libswscale
+        libavfilter
+    )
+    set(FFMPEG_PREPARED_BINARIES
+            "${CMAKE_SOURCE_DIR}/third-party/build-deps/dist/${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+    set(FFMPEG_LIBRARIES
+        PkgConfig::FFMPEG_SYSTEM
+        "${FFMPEG_PREPARED_BINARIES}/lib/libcbs.a"
+    )
+    # Use bundled headers for CBS, system headers for rest
+    set(FFMPEG_INCLUDE_DIRS
+        "${FFMPEG_PREPARED_BINARIES}/include"
+    )
+    message(STATUS "Using system FFmpeg with bundled CBS")
+elseif(NOT DEFINED FFMPEG_PREPARED_BINARIES)
     if(WIN32)
         set(FFMPEG_PLATFORM_LIBRARIES mfplat ole32 strmiids mfuuid vpl)
     elseif(FREEBSD)
