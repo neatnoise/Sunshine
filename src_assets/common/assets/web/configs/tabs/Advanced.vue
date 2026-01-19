@@ -118,8 +118,7 @@ const config = ref(props.config)
       <template #linux>
         <Checkbox class="mb-3"
                   id="kms_vblank"
-                  label="KMS VBlank Sync"
-                  description="Wait for vertical blank before capturing. Reduces tearing but adds latency (~8-16ms)."
+                  locale-prefix="config"
                   v-model="config.kms_vblank"
                   default="false"
         ></Checkbox>
