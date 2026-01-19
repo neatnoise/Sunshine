@@ -122,7 +122,9 @@ namespace video {
   util::Either<avcodec_buffer_t, int> vaapi_init_avcodec_hardware_input_buffer(platf::avcodec_encode_device_t *);
   util::Either<avcodec_buffer_t, int> cuda_init_avcodec_hardware_input_buffer(platf::avcodec_encode_device_t *);
   util::Either<avcodec_buffer_t, int> vt_init_avcodec_hardware_input_buffer(platf::avcodec_encode_device_t *);
+#ifdef SUNSHINE_BUILD_VULKAN
   util::Either<avcodec_buffer_t, int> vulkan_init_avcodec_hardware_input_buffer(platf::avcodec_encode_device_t *);
+#endif
 
   class avcodec_software_encode_device_t: public platf::avcodec_encode_device_t {
   public:
@@ -956,6 +958,7 @@ namespace video {
     LIMITED_GOP_SIZE | PARALLEL_ENCODING | NO_RC_BUF_LIMIT
   };
 
+#ifdef SUNSHINE_BUILD_VULKAN
   encoder_t vulkan {
     "vulkan"sv,
     std::make_unique<encoder_platform_formats_avcodec>(
@@ -1021,7 +1024,8 @@ namespace video {
     },
     LIMITED_GOP_SIZE | PARALLEL_ENCODING
   };
-#endif
+#endif  // SUNSHINE_BUILD_VULKAN
+#endif  // linux
 
 #ifdef __APPLE__
   encoder_t videotoolbox {
@@ -1100,7 +1104,9 @@ namespace video {
     &amdvce,
 #endif
 #if defined(__linux__) || defined(linux) || defined(__linux) || defined(__FreeBSD__)
+#ifdef SUNSHINE_BUILD_VULKAN
     &vulkan,
+#endif
     &vaapi,
 #endif
 #ifdef __APPLE__
@@ -2937,6 +2943,7 @@ namespace video {
     return hw_device_buf;
   }
 
+#ifdef SUNSHINE_BUILD_VULKAN
   typedef int (*vulkan_init_avcodec_hardware_input_buffer_fn)(platf::avcodec_encode_device_t *encode_device, AVBufferRef **hw_device_buf);
 
   util::Either<avcodec_buffer_t, int> vulkan_init_avcodec_hardware_input_buffer(platf::avcodec_encode_device_t *encode_device) {
@@ -2960,6 +2967,7 @@ namespace video {
 
     return hw_device_buf;
   }
+#endif
 
   util::Either<avcodec_buffer_t, int> cuda_init_avcodec_hardware_input_buffer(platf::avcodec_encode_device_t *encode_device) {
     avcodec_buffer_t hw_device_buf;
@@ -3058,8 +3066,10 @@ namespace video {
         return platf::mem_type_e::dxgi;
       case AV_HWDEVICE_TYPE_VAAPI:
         return platf::mem_type_e::vaapi;
+#ifdef SUNSHINE_BUILD_VULKAN
       case AV_HWDEVICE_TYPE_VULKAN:
         return platf::mem_type_e::vulkan;
+#endif
       case AV_HWDEVICE_TYPE_CUDA:
         return platf::mem_type_e::cuda;
       case AV_HWDEVICE_TYPE_NONE:
