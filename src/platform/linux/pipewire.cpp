@@ -688,6 +688,9 @@ namespace platf::pipewire {
 #ifdef SUNSHINE_BUILD_VAAPI
       return va::make_avcodec_encode_device(width, height, 0, 0, true);
 #endif
+#ifdef SUNSHINE_BUILD_VULKAN
+      return vk::make_avcodec_encode_device_vram(width, height, 0, 0);
+#endif
       return std::make_unique<avcodec_encode_device_t>();
     }
 
@@ -727,7 +730,11 @@ namespace platf::pipewire {
   };
 
   std::shared_ptr<display_t> display(mem_type_e hwdevice_type, const std::string &display_name, const ::video::config_t &config) {
-    if (hwdevice_type == mem_type_e::vaapi) {
+    if (hwdevice_type == mem_type_e::vaapi
+#ifdef SUNSHINE_BUILD_VULKAN
+        || hwdevice_type == mem_type_e::vulkan
+#endif
+    ) {
       auto disp = std::make_shared<display_pw_vram_t>();
       if (disp->init(display_name, config) == 0 && g_dmabuf_negotiated) {
         BOOST_LOG(info) << "PipeWire DMA-BUF zero-copy capture"sv;
