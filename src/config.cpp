@@ -490,6 +490,7 @@ namespace config {
     {},  // encoder
     {},  // adapter_name
     {},  // output_name
+    false,  // kms_vblank
 
     {
       video_t::dd_t::config_option_e::disabled,  // configuration_option
@@ -1120,6 +1121,7 @@ namespace config {
     string_f(vars, "encoder", video.encoder);
     string_f(vars, "adapter_name", video.adapter_name);
     string_f(vars, "output_name", video.output_name);
+    bool_f(vars, "kms_vblank", video.kms_vblank);
 
     generic_f(vars, "dd_configuration_option", video.dd.configuration_option, dd::config_option_from_view);
     generic_f(vars, "dd_resolution_option", video.dd.resolution_option, dd::resolution_option_from_view);

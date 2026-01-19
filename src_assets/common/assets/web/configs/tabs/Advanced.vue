@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import PlatformLayout from '../../PlatformLayout.vue'
+import Checkbox from '../../Checkbox.vue'
 
 const props = defineProps([
   'platform',
@@ -111,6 +112,19 @@ const config = ref(props.config)
       </select>
       <div class="form-text">{{ $t('config.encoder_desc') }}</div>
     </div>
+
+    <!-- KMS VBlank (Linux only) -->
+    <PlatformLayout :platform="platform">
+      <template #linux>
+        <Checkbox class="mb-3"
+                  id="kms_vblank"
+                  label="KMS VBlank Sync"
+                  description="Wait for vertical blank before capturing. Reduces tearing but adds latency (~8-16ms)."
+                  v-model="config.kms_vblank"
+                  default="false"
+        ></Checkbox>
+      </template>
+    </PlatformLayout>
 
   </div>
 </template>

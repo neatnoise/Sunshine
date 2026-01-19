@@ -1164,17 +1164,26 @@ namespace platf {
         sleep_overshoot_logger.reset();
 
         while (true) {
-          auto now = std::chrono::steady_clock::now();
+          if (config::video.kms_vblank) {
+            // Wait for vblank (replaces timer-based delay)
+            drmVBlank vbl = {};
+            vbl.request.type = (drmVBlankSeqType)(DRM_VBLANK_RELATIVE | (crtc_index << DRM_VBLANK_HIGH_CRTC_SHIFT));
+            vbl.request.sequence = 1;
+            drmWaitVBlank(card.fd.el, &vbl);
+          } else {
+            // Timer-based delay
+            auto now = std::chrono::steady_clock::now();
 
-          if (next_frame > now) {
-            std::this_thread::sleep_for(next_frame - now);
-            sleep_overshoot_logger.first_point(next_frame);
-            sleep_overshoot_logger.second_point_now_and_log();
-          }
+            if (next_frame > now) {
+              std::this_thread::sleep_for(next_frame - now);
+              sleep_overshoot_logger.first_point(next_frame);
+              sleep_overshoot_logger.second_point_now_and_log();
+            }
 
-          next_frame += delay;
-          if (next_frame < now) {  // some major slowdown happened; we couldn't keep up
-            next_frame = now + delay;
+            next_frame += delay;
+            if (next_frame < now) {  // some major slowdown happened; we couldn't keep up
+              next_frame = now + delay;
+            }
           }
 
           std::shared_ptr<platf::img_t> img_out;
