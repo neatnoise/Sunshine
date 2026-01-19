@@ -247,7 +247,6 @@ namespace vk {
     
     // Try render device path first, then fallback to device indices
     if (av_hwdevice_ctx_create(hw_device_buf, AV_HWDEVICE_TYPE_VULKAN, "/dev/dri/renderD128", nullptr, 0) >= 0) {
-      BOOST_LOG(info) << "Using Vulkan device: /dev/dri/renderD128"sv;
       return 0;
     }
 
@@ -255,7 +254,6 @@ namespace vk {
     const char *devices[] = {"1", "0", "2", "3", nullptr};
     for (int i = 0; devices[i]; i++) {
       if (av_hwdevice_ctx_create(hw_device_buf, AV_HWDEVICE_TYPE_VULKAN, devices[i], nullptr, 0) >= 0) {
-        BOOST_LOG(info) << "Using Vulkan device index: "sv << devices[i];
         return 0;
       }
     }
