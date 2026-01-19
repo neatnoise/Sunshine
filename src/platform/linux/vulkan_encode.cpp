@@ -1,6 +1,6 @@
 /**
  * @file src/platform/linux/vulkan_encode.cpp
- * @brief FFmpeg Vulkan encoder - zero-copy via Vulkan→DMA-BUF→EGL.
+ * @brief FFmpeg Vulkan encoder with zero-copy DMA-BUF import.
  */
 
 #include <fcntl.h>
@@ -70,14 +70,15 @@ namespace vk {
 
       auto *frames_ctx = (AVHWFramesContext *) hw_frames_ctx_buf->data;
       auto *dev_ctx = (AVHWDeviceContext *) frames_ctx->device_ref->data;
-      auto *vk_dev_ctx = (AVVulkanDeviceContext *) dev_ctx->hwctx;
+      vk_dev_ctx = (AVVulkanDeviceContext *) dev_ctx->hwctx;
 
       vk_dev = vk_dev_ctx->act_dev;
+      vk_inst = vk_dev_ctx->inst;
+      vk_phys_dev = vk_dev_ctx->phys_dev;
 
       // Load Vulkan extension functions
       if (!vkGetMemoryFdKHR_fn) {
         vkGetMemoryFdKHR_fn = (PFN_vkGetMemoryFdKHR)vkGetDeviceProcAddr(vk_dev, "vkGetMemoryFdKHR");
-        vkGetImageSubresourceLayout_fn = (PFN_vkGetImageSubresourceLayout)vkGetDeviceProcAddr(vk_dev, "vkGetImageSubresourceLayout");
       }
 
       // Create sws for RGB->NV12 conversion
@@ -92,11 +93,26 @@ namespace vk {
     
     void init_hwframes(AVHWFramesContext *frames) override {
       frames->initial_pool_size = 4;
+      
+      // Request linear tiling for simpler interop
+      auto *vk_frames = (AVVulkanFramesContext *)frames->hwctx;
+      vk_frames->tiling = VK_IMAGE_TILING_LINEAR;
+      vk_frames->usage = (VkImageUsageFlagBits)(VK_IMAGE_USAGE_TRANSFER_DST_BIT | 
+                                                 VK_IMAGE_USAGE_SAMPLED_BIT);
     }
 
     int convert(platf::img_t &img) override {
       auto &descriptor = (egl::img_descriptor_t &) img;
 
+      // Get Vulkan frame
+      if (!frame->buf[0]) {
+        if (av_hwframe_get_buffer(hw_frames_ctx, frame, 0) < 0) {
+          BOOST_LOG(error) << "Failed to get Vulkan frame"sv;
+          return -1;
+        }
+      }
+
+      // Import source RGB texture
       if (descriptor.sequence == 0) {
         rgb = egl::create_blank(img);
       } else if (descriptor.sequence > sequence) {
@@ -107,29 +123,17 @@ namespace vk {
         rgb = std::move(*rgb_opt);
       }
 
-      // Get Vulkan frame
-      if (!frame->buf[0]) {
-        if (av_hwframe_get_buffer(hw_frames_ctx, frame, 0) < 0) {
-          BOOST_LOG(error) << "Failed to get Vulkan frame"sv;
-          return -1;
-        }
-        nv12_imported = false;  // New frame, need to re-import
-      }
-
-      // Setup Vulkan→EGL interop if needed
+      // Setup Vulkan→EGL zero-copy interop if needed
       if (!nv12_imported) {
         if (!setup_vulkan_egl_interop()) {
-          // Fallback to CPU path
           return convert_cpu_fallback(descriptor);
         }
         nv12_imported = true;
       }
 
-      // Render RGB→NV12 directly into Vulkan memory via EGL
+      // Render RGB→NV12 directly into Vulkan memory via EGL (zero-copy)
       sws.load_vram(descriptor, 0, 0, rgb->tex[0]);
       sws.convert(nv12->buf);
-      
-      // Ensure EGL is done before Vulkan uses the frame
       gl::ctx.Finish();
 
       return 0;
@@ -137,52 +141,76 @@ namespace vk {
 
   private:
     bool setup_vulkan_egl_interop() {
-      if (!vkGetMemoryFdKHR_fn || !vkGetImageSubresourceLayout_fn) {
+      if (!vkGetMemoryFdKHR_fn) {
+        BOOST_LOG(warning) << "vkGetMemoryFdKHR not available"sv;
         return false;
       }
 
       AVVkFrame *vk_frame = (AVVkFrame *) frame->data[0];
       if (!vk_frame) {
+        BOOST_LOG(warning) << "No Vulkan frame"sv;
+        return false;
+      }
+      
+      BOOST_LOG(info) << "Vulkan frame tiling: " << vk_frame->tiling 
+                      << " flags: 0x" << std::hex << (int)vk_frame->flags << std::dec;
+
+      // Count images and memories
+      int num_imgs = 0, num_mems = 0;
+      for (int i = 0; i < AV_NUM_DATA_POINTERS; i++) {
+        if (vk_frame->img[i]) num_imgs++;
+        if (vk_frame->mem[i]) num_mems++;
+      }
+      BOOST_LOG(info) << "Vulkan frame: " << num_imgs << " image(s), " << num_mems << " memory object(s)"sv;
+
+      // Export the first memory object
+      VkMemoryGetFdInfoKHR fd_info = {};
+      fd_info.sType = VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR;
+      fd_info.memory = vk_frame->mem[0];
+      fd_info.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
+
+      int fd = -1;
+      VkResult res = vkGetMemoryFdKHR_fn(vk_dev, &fd_info, &fd);
+      if (res != VK_SUCCESS || fd < 0) {
+        BOOST_LOG(warning) << "vkGetMemoryFdKHR failed: " << res 
+                           << " (VK_ERROR_OUT_OF_DEVICE_MEMORY=-2 means memory not allocated with export flag)"sv;
         return false;
       }
 
       std::array<file_t, 4> fds;
-      std::array<egl::surface_descriptor_t, 4> sds;
+      fds[0].el = fd;
+      fds[1].el = dup(fd);  // Both planes use same memory
 
-      // Export Y and UV planes
+      egl::surface_descriptor_t sds[2] = {};
+
+      // For multiplane format in single image, query plane aspects
+      bool multiplane_single_image = (num_imgs == 1 && num_mems == 1);
+      
       for (int i = 0; i < 2; i++) {
-        // Export memory to DMA-BUF
-        VkMemoryGetFdInfoKHR fd_info = {};
-        fd_info.sType = VK_STRUCTURE_TYPE_MEMORY_GET_FD_INFO_KHR;
-        fd_info.memory = vk_frame->mem[i];
-        fd_info.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT;
-
-        int fd = -1;
-        VkResult res = vkGetMemoryFdKHR_fn(vk_dev, &fd_info, &fd);
-        if (res != VK_SUCCESS || fd < 0) {
-          return false;
-        }
-        fds[i].el = fd;
-
-        // Get image layout
-        VkImageSubresource subres = {};
-        subres.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        subres.mipLevel = 0;
-        subres.arrayLayer = 0;
-
-        VkSubresourceLayout layout;
-        vkGetImageSubresourceLayout_fn(vk_dev, vk_frame->img[i], &subres, &layout);
-
-        // Setup surface descriptor
-        sds[i].fourcc = (i == 0) ? DRM_FORMAT_R8 : DRM_FORMAT_GR88;
-        sds[i].width = frame->width >> (i ? 1 : 0);
-        sds[i].height = frame->height >> (i ? 1 : 0);
-        sds[i].pitches[0] = layout.rowPitch;
-        sds[i].offsets[0] = layout.offset;
-        sds[i].modifier = DRM_FORMAT_MOD_LINEAR;
-        sds[i].fds[0] = fds[i].el;
+        auto &sd = sds[i];
+        sd.fourcc = (i == 0) ? DRM_FORMAT_R8 : DRM_FORMAT_GR88;
+        sd.width = frame->width >> (i ? 1 : 0);
+        sd.height = frame->height >> (i ? 1 : 0);
+        sd.modifier = DRM_FORMAT_MOD_LINEAR;
+        sd.fds[0] = fds[i].el;
+        sd.fds[1] = sd.fds[2] = sd.fds[3] = -1;
         
-        BOOST_LOG(info) << "Plane " << i << ": " << sds[i].width << "x" << sds[i].height << " pitch=" << layout.rowPitch;
+        VkImageSubresource subres = {};
+        if (multiplane_single_image) {
+          // Single multiplane image - use plane aspects
+          subres.aspectMask = (i == 0) ? VK_IMAGE_ASPECT_PLANE_0_BIT : VK_IMAGE_ASPECT_PLANE_1_BIT;
+        } else {
+          // Separate images per plane
+          subres.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        }
+        
+        VkSubresourceLayout layout;
+        vkGetImageSubresourceLayout(vk_dev, vk_frame->img[multiplane_single_image ? 0 : i], &subres, &layout);
+        sd.pitches[0] = layout.rowPitch;
+        sd.offsets[0] = layout.offset;
+        
+        BOOST_LOG(info) << "Plane " << i << ": " << sd.width << "x" << sd.height 
+                        << " pitch=" << sd.pitches[0] << " offset=" << sd.offsets[0];
       }
 
       // Import into EGL
@@ -376,9 +404,13 @@ namespace vk {
     void *gbm_map_data_y = nullptr;
     void *gbm_map_data_uv = nullptr;
 
+    // Vulkan device state (from FFmpeg)
+    VkInstance vk_inst = VK_NULL_HANDLE;
+    VkPhysicalDevice vk_phys_dev = VK_NULL_HANDLE;
     VkDevice vk_dev = VK_NULL_HANDLE;
+    AVVulkanDeviceContext *vk_dev_ctx = nullptr;
+    
     PFN_vkGetMemoryFdKHR vkGetMemoryFdKHR_fn = nullptr;
-    PFN_vkGetImageSubresourceLayout vkGetImageSubresourceLayout_fn = nullptr;
   };
 
   int vulkan_init_avcodec_hardware_input_buffer(platf::avcodec_encode_device_t *, AVBufferRef **hw_device_buf) {
