@@ -129,7 +129,7 @@ const config = ref(props.config)
                   id="kms_vblank"
                   locale-prefix="config"
                   v-model="config.kms_vblank"
-                  default="false"
+                  default="true"
         ></Checkbox>
       </template>
     </PlatformLayout>
