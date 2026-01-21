@@ -626,8 +626,6 @@ namespace platf::pipewire {
 
   private:
     mem_type_e mem_type;
-    int width = 0;
-    int height = 0;
     std::chrono::nanoseconds frame_duration;
   };
 
@@ -746,8 +744,6 @@ namespace platf::pipewire {
       return true;
     }
 
-    int width = 0;
-    int height = 0;
     uint64_t sequence = 0;
     std::chrono::nanoseconds frame_duration;
     egl::display_t egl_display;
