@@ -7,6 +7,61 @@ list(APPEND SUNSHINE_COMPILE_OPTIONS -Wall -Wno-sign-compare)
 # Wno-maybe-uninitialized/Wno-uninitialized - disable warnings for maybe uninitialized variables
 # Wno-sign-compare - disable warnings for signed/unsigned comparisons
 # Wno-restrict - disable warnings for memory overlap
+
+# ----------------------------------------------------------------------------
+# Native microarch optimisation (opt-in on Linux x86_64).
+# Detect the build host's Zen generation and compile with -march/-mtune.
+# Falls back to x86-64-v3 (AVX2). Disable with -DSUNSHINE_NATIVE_ARCH=OFF.
+# ----------------------------------------------------------------------------
+if(UNIX AND NOT APPLE AND NOT DEFINED SUNSHINE_NATIVE_ARCH)
+    set(SUNSHINE_NATIVE_ARCH OFF CACHE BOOL
+        "Optimise for the build host's microarchitecture.")
+endif()
+
+if(SUNSHINE_NATIVE_ARCH AND UNIX AND NOT APPLE)
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "(amd64|AMD64|x86_64|X86_64)")
+        set(_sunshine_native_march "")
+        set(_sunshine_cpuinfo_file "/proc/cpuinfo")
+        if(EXISTS ${_sunshine_cpuinfo_file})
+            file(READ ${_sunshine_cpuinfo_file} _sunshine_cpuinfo)
+            # Use cpu family + model fields for reliable Zen detection.
+            # Family 26 = Zen 5, Family 25 = Zen 3/4, Family 23 = Zen 1/2.
+            string(REGEX MATCH "cpu family[^\n]*: ([0-9]+)" _ "${_sunshine_cpuinfo}")
+            set(_cpu_family "${CMAKE_MATCH_1}")
+            string(REGEX MATCH "model[^\n]*: ([0-9]+)" _ "${_sunshine_cpuinfo}")
+            set(_cpu_model "${CMAKE_MATCH_1}")
+            if(_cpu_family EQUAL 26)
+                set(_sunshine_native_march "znver5")
+            elseif(_cpu_family EQUAL 25)
+                if(_cpu_model GREATER_EQUAL 96)
+                    set(_sunshine_native_march "znver4")
+                else()
+                    set(_sunshine_native_march "znver3")
+                endif()
+            elseif(_cpu_family EQUAL 23)
+                if(_cpu_model GREATER_EQUAL 49)
+                    set(_sunshine_native_march "znver2")
+                else()
+                    set(_sunshine_native_march "znver1")
+                endif()
+            endif()
+        endif()
+        if(NOT _sunshine_native_march)
+            set(_sunshine_native_march "x86-64-v3")
+            set(_sunshine_native_mtune "generic")
+        endif()
+        if("${_sunshine_native_march}" STREQUAL "x86-64-v3")
+            set(_sunshine_native_mtune "generic")
+        else()
+            set(_sunshine_native_mtune "${_sunshine_native_march}")
+        endif()
+        message(STATUS "Native build: -march=${_sunshine_native_march} -mtune=${_sunshine_native_mtune}")
+        list(APPEND SUNSHINE_COMPILE_OPTIONS
+            "-march=${_sunshine_native_march}"
+            "-mtune=${_sunshine_native_mtune}")
+    endif()
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # GCC specific compile options
 
