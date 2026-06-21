@@ -224,6 +224,12 @@ namespace pipewire {
         }
 
         struct pw_properties *props = pw_properties_new(PW_KEY_MEDIA_TYPE, "Video", PW_KEY_MEDIA_CATEGORY, "Capture", PW_KEY_MEDIA_ROLE, "Screen", nullptr);
+#ifdef PW_KEY_NODE_LATENCY
+        // Request the lowest practical quantum from PipeWire to minimize
+        // capture pipeline latency. 128/48000 = ~2.67 ms. The compositor
+        // may grant a larger quantum if the hardware cannot keep up.
+        pw_properties_set(props, PW_KEY_NODE_LATENCY, "128/48000");
+#endif
 #ifdef PW_KEY_TARGET_OBJECT
         // If pipewire supports setting a PW_KEY_TARGET_OBJECT via object serial and the serial is valid (lower 32-bits not SPA_ID_INVALID, see PW_KEY_OBJECT_SERIAL docs), use it.
         if ((object_serial & SPA_ID_INVALID) != SPA_ID_INVALID) {
