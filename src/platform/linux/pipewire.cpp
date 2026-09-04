@@ -844,11 +844,12 @@ namespace pipewire {
       // calculate frame interval we should capture at
       delay = ::video::capture_frame_interval(config);
 
-      // WORKAROUND: if the active compositor is KWin, request variable rate (0, 1) capture only for versions 5.x-6.7.x.
+      // WORKAROUND: if the active compositor is KWin, request variable rate (0, 1) capture only for versions 5.x-6.6.x.
       // Ref: https://bugs.kde.org/show_bug.cgi?id=524129
       // Also negotiate variable rate for all other compositors. Mutter's variable rate pacing is superior.
+      // NOTE: Changed from < 8 to < 7 to support patched KWin 6.7.x with backported pacing fix
       const static std::vector<int> kwin_version = get_running_kwin_version();
-      const static bool negotiate_variable_rate = kwin_version.empty() || (kwin_version[0] == 5 || (kwin_version[0] == 6 && kwin_version[1] < 8));
+      const static bool negotiate_variable_rate = kwin_version.empty() || (kwin_version[0] == 5 || (kwin_version[0] == 6 && kwin_version[1] < 7));
 
       const AVRational fps = (negotiate_variable_rate ? AVRational {0, 1} : ::video::framerate_to_rational(config));
       if (fps.den != 1) {
