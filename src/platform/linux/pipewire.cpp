@@ -591,7 +591,7 @@ namespace pipewire {
 
       using enum compositor_type_e;
       if (compositor.type == kwin) {
-        variable_rate = (compositor.version[0] == 5 || (compositor.version[0] == 6 && (compositor.version[1] < 7 || (compositor.version[1] == 7 && compositor.version[2] < 80))));
+        variable_rate = (compositor.version[0] == 5 || (compositor.version[0] == 6 && compositor.version[1] < 7));
       }
 
       return variable_rate;
