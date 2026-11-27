@@ -585,7 +585,7 @@ namespace pipewire {
      * @return True if variable rate capture is suitable.
      */
     static bool
-      use_variable_rate(const compositor_version_t &compositor) {
+      use_variable_rate([[maybe_unused]] const compositor_version_t &compositor) {
       // If the active compositor is KWin, request variable rate (0, 1) capture for versions 5.x-6.7.79 (up to 6.7 stable series).
       // Issue: KWin <=6.7 has a ~3% fixed-rate pacing deficit vs the requested framerate; variable rate avoids this and prioritizes gaming smoothness.
       //        KWin 6.7 regresses variable rate (desktop animations run at half speed, but doesn't affect in-game pacing). Ref: https://bugs.kde.org/show_bug.cgi?id=524129
@@ -593,16 +593,11 @@ namespace pipewire {
       //        new regression tied to 'commit-timing'/VK_KHR_present_timing support when Vsync/FIFO is enabled. Ref: https://bugs.kde.org/show_bug.cgi?id=525619
       // Summary: KWin 5.5-6.6 have excellent (variable) pacing. KWin 6.7 has poor desktop animation pacing (variable) but good game pacing.
       //          KWin 6.8+ will have good overall (fixed) pacing if #525619 can be resolved, otherwise we will update docs advising to disable VSync in games.
+      // Local override: request variable rate for every KWin version, including 6.8+, to avoid the fixed-rate
+      // stutter of #525619 when games run with VSync enabled.
 
-      // All other compositors (including Mutter) will default to variable rate.
-      bool variable_rate = true;
-
-      using enum compositor_type_e;
-      if (compositor.type == kwin) {
-        variable_rate = (compositor.version[0] == 5 || (compositor.version[0] == 6 && (compositor.version[1] < 7 || (compositor.version[1] == 7 && compositor.version[2] < 80))));
-      }
-
-      return variable_rate;
+      // All compositors (including KWin and Mutter) use variable rate.
+      return true;
     }
 
     /**
